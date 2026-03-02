@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM LLM-Chat PyPI Publish Script for Windows
+REM Liao PyPI Publish Script for Windows
 REM ============================================================
 REM Usage:
 REM   publish.bat          - Build and upload to PyPI
@@ -21,7 +21,7 @@ if "%MODE%"=="" set MODE=pypi
 
 echo.
 echo ============================================================
-echo  LLM-Chat Package Publisher
+echo  Liao Package Publisher
 echo ============================================================
 echo.
 
@@ -38,7 +38,7 @@ echo [1/4] Cleaning old build artifacts...
 if exist dist rmdir /s /q dist
 if exist build rmdir /s /q build
 if exist src\*.egg-info rmdir /s /q src\*.egg-info
-if exist src\llm_chat.egg-info rmdir /s /q src\llm_chat.egg-info
+if exist src\liao.egg-info rmdir /s /q src\liao.egg-info
 echo       Done.
 echo.
 
@@ -90,7 +90,7 @@ if "%MODE%"=="test" (
     )
     echo.
     echo Success! Package uploaded to TestPyPI.
-    echo Install with: pip install -i https://test.pypi.org/simple/ llm-chat
+    echo Install with: pip install -i https://test.pypi.org/simple/ liao
     goto :end
 )
 
@@ -107,7 +107,7 @@ if %errorlevel% neq 0 (
 )
 echo.
 echo Success! Package uploaded to PyPI.
-echo Install with: pip install llm-chat
+echo Install with: pip install liao
 
 :end
 echo.

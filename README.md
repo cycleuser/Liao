@@ -1,4 +1,4 @@
-# LLM Chat
+# Liao (聊)
 
 Vision-based GUI interaction assistant with LLM integration.
 
@@ -19,24 +19,24 @@ A Python package for automating desktop chat applications using vision/OCR capab
 ### From PyPI (when published)
 
 ```bash
-pip install llm-chat
+pip install liao
 ```
 
 ### With optional dependencies
 
 ```bash
 # With OCR support (recommended)
-pip install llm-chat[ocr]
+pip install liao[ocr]
 
 # All optional dependencies
-pip install llm-chat[all]
+pip install liao[all]
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/cycleuser/llm-chat.git
-cd llm-chat
+git clone https://github.com/cycleuser/Liao.git
+cd Liao
 pip install -e ".[all,dev]"
 ```
 
@@ -52,29 +52,29 @@ pip install -e ".[all,dev]"
 ### Launch GUI
 
 ```bash
-llm-chat
+liao
 # or
-python -m llm_chat
+python -m liao
 ```
 
 ### List available windows
 
 ```bash
-llm-chat list
-llm-chat list --chat-only
+liao list
+liao list --chat-only
 ```
 
 ### Headless automation
 
 ```bash
-llm-chat auto --title "WeChat" --model llama3 --rounds 5
+liao auto --title "WeChat" --model llama3 --rounds 5
 ```
 
 ### Programmatic usage
 
 ```python
-from llm_chat import VisionAgent, LLMClientFactory
-from llm_chat.core import WindowManager
+from liao import VisionAgent, LLMClientFactory
+from liao.core import WindowManager
 
 # Create LLM client (Ollama local)
 llm = LLMClientFactory.create_client(
@@ -125,8 +125,8 @@ agent.run()
 ### Setup development environment
 
 ```bash
-git clone https://github.com/cycleuser/llm-chat.git
-cd llm-chat
+git clone https://github.com/cycleuser/Liao.git
+cd Liao
 pip install -e ".[all,dev]"
 ```
 
@@ -170,10 +170,9 @@ chmod +x publish.sh
 ## Project Structure
 
 ```
-llm-chat/
-├── src/llm_chat/
-│   ├── __init__.py
-│   ├── _version.py          # Single version source
+Liao/
+├── src/liao/
+│   ├── __init__.py           # Version and public API
 │   ├── api.py                # Public API (VisionAgent)
 │   ├── cli.py                # CLI entry point
 │   ├── core/                 # Core modules

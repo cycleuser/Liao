@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Screenshot Generation Script for llm-chat
+Screenshot Generation Script for Liao
 
 Generates screenshots for documentation by running the GUI
 and capturing specific states.
@@ -30,8 +30,8 @@ def capture_main_window() -> None:
     from PySide6.QtCore import QTimer
     from PySide6.QtGui import QPixmap
     
-    from llm_chat.gui.main_window import MainWindow
-    from llm_chat.gui.i18n import set_locale
+    from liao.gui.main_window import MainWindow
+    from liao.gui.i18n import set_locale
     
     # DPI awareness
     try:
@@ -86,7 +86,7 @@ def capture_main_window() -> None:
 
 
 def main() -> int:
-    print("Generating screenshots for llm-chat...\n")
+    print("Generating screenshots for Liao...\n")
     
     try:
         screenshots = capture_main_window()

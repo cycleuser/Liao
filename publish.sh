@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# LLM-Chat PyPI Publish Script for Unix/Linux/macOS
+# Liao PyPI Publish Script for Unix/Linux/macOS
 # ============================================================
 # Usage:
 #   ./publish.sh          - Build and upload to PyPI
@@ -20,7 +20,7 @@ MODE="${1:-pypi}"
 
 echo ""
 echo "============================================================"
-echo " LLM-Chat Package Publisher"
+echo " Liao Package Publisher"
 echo "============================================================"
 echo ""
 
@@ -33,7 +33,7 @@ fi
 
 # Step 1: Clean old builds
 echo "[1/4] Cleaning old build artifacts..."
-rm -rf dist/ build/ src/*.egg-info src/llm_chat.egg-info
+rm -rf dist/ build/ src/*.egg-info src/liao.egg-info
 echo "      Done."
 echo ""
 
@@ -74,7 +74,7 @@ case "$MODE" in
         uv run twine upload --repository testpypi dist/*
         echo ""
         echo "Success! Package uploaded to TestPyPI."
-        echo "Install with: pip install -i https://test.pypi.org/simple/ llm-chat"
+        echo "Install with: pip install -i https://test.pypi.org/simple/ liao"
         ;;
     pypi|*)
         echo "[4/4] Uploading to PyPI..."
@@ -85,7 +85,7 @@ case "$MODE" in
         uv run twine upload dist/*
         echo ""
         echo "Success! Package uploaded to PyPI."
-        echo "Install with: pip install llm-chat"
+        echo "Install with: pip install liao"
         ;;
 esac
 

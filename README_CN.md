@@ -1,4 +1,4 @@
-# LLM Chat
+# 聊 (Liao)
 
 基于视觉的GUI界面交互辅助智能体，集成大语言模型。
 
@@ -19,24 +19,24 @@
 ### 从PyPI安装（发布后）
 
 ```bash
-pip install llm-chat
+pip install liao
 ```
 
 ### 安装可选依赖
 
 ```bash
 # 带OCR支持（推荐）
-pip install llm-chat[ocr]
+pip install liao[ocr]
 
 # 所有可选依赖
-pip install llm-chat[all]
+pip install liao[all]
 ```
 
 ### 从源码安装
 
 ```bash
-git clone https://github.com/cycleuser/llm-chat.git
-cd llm-chat
+git clone https://github.com/cycleuser/Liao.git
+cd Liao
 pip install -e ".[all,dev]"
 ```
 
@@ -52,29 +52,29 @@ pip install -e ".[all,dev]"
 ### 启动GUI
 
 ```bash
-llm-chat
+liao
 # 或
-python -m llm_chat
+python -m liao
 ```
 
 ### 列出可用窗口
 
 ```bash
-llm-chat list
-llm-chat list --chat-only
+liao list
+liao list --chat-only
 ```
 
 ### 无头自动化
 
 ```bash
-llm-chat auto --title "微信" --model llama3 --rounds 5
+liao auto --title "微信" --model llama3 --rounds 5
 ```
 
 ### 程序化使用
 
 ```python
-from llm_chat import VisionAgent, LLMClientFactory
-from llm_chat.core import WindowManager
+from liao import VisionAgent, LLMClientFactory
+from liao.core import WindowManager
 
 # 创建LLM客户端（Ollama本地）
 llm = LLMClientFactory.create_client(
@@ -125,8 +125,8 @@ agent.run()
 ### 设置开发环境
 
 ```bash
-git clone https://github.com/cycleuser/llm-chat.git
-cd llm-chat
+git clone https://github.com/cycleuser/Liao.git
+cd Liao
 pip install -e ".[all,dev]"
 ```
 
@@ -170,10 +170,9 @@ chmod +x publish.sh
 ## 项目结构
 
 ```
-llm-chat/
-├── src/llm_chat/
-│   ├── __init__.py
-│   ├── _version.py          # 版本号唯一来源
+Liao/
+├── src/liao/
+│   ├── __init__.py           # 版本号和公共API
 │   ├── api.py                # 公共API (VisionAgent)
 │   ├── cli.py                # CLI入口点
 │   ├── core/                 # 核心模块

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-PyPI Upload Script for llm-chat
+PyPI Upload Script for Liao
 
 This script automates the process of building and uploading
 the package to PyPI (or TestPyPI for testing).
@@ -29,8 +29,8 @@ from pathlib import Path
 
 
 def get_version() -> str:
-    """Read version from _version.py."""
-    version_file = Path(__file__).parent.parent / "src" / "llm_chat" / "_version.py"
+    """Read version from __init__.py."""
+    version_file = Path(__file__).parent.parent / "src" / "liao" / "__init__.py"
     with open(version_file, "r", encoding="utf-8") as f:
         for line in f:
             if line.startswith("__version__"):
@@ -118,7 +118,7 @@ def create_git_tag(version: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Upload llm-chat to PyPI")
+    parser = argparse.ArgumentParser(description="Upload Liao to PyPI")
     parser.add_argument("--test", action="store_true", help="Upload to TestPyPI first")
     parser.add_argument("--check", action="store_true", help="Only build and check, don't upload")
     parser.add_argument("--no-clean", action="store_true", help="Don't clean dist directory")
@@ -154,7 +154,7 @@ def main() -> int:
     if args.test:
         upload_to_testpypi()
         print(f"\n=== Uploaded to TestPyPI ===")
-        print(f"Install with: pip install -i https://test.pypi.org/simple/ llm-chat=={version}")
+        print(f"Install with: pip install -i https://test.pypi.org/simple/ liao=={version}")
         
         response = input("\nContinue to upload to PyPI? [y/N] ")
         if response.lower() != "y":
@@ -164,7 +164,7 @@ def main() -> int:
     upload_to_pypi()
     
     print(f"\n=== Uploaded to PyPI ===")
-    print(f"Install with: pip install llm-chat=={version}")
+    print(f"Install with: pip install liao=={version}")
     
     # Tag
     if args.tag:

@@ -2,8 +2,8 @@
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from llm_chat.llm.factory import LLMClientFactory
-from llm_chat.llm.ollama import OllamaClient
+from liao.llm.factory import LLMClientFactory
+from liao.llm.ollama import OllamaClient
 
 
 class TestLLMClientFactory:

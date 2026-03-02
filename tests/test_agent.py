@@ -1,8 +1,8 @@
 """Tests for agent modules."""
 
 import pytest
-from llm_chat.agent.conversation import ConversationMemory
-from llm_chat.agent.prompts import PromptManager
+from liao.agent.conversation import ConversationMemory
+from liao.agent.prompts import PromptManager
 
 
 class TestConversationMemory:

@@ -1,9 +1,9 @@
 """Tests for core modules."""
 
 import pytest
-from llm_chat.models.window import WindowInfo
-from llm_chat.models.message import ChatMessage
-from llm_chat.models.detection import AreaDetectionResult
+from liao.models.window import WindowInfo
+from liao.models.message import ChatMessage
+from liao.models.detection import AreaDetectionResult
 
 
 class TestWindowInfo:
