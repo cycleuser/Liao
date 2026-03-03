@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -68,6 +69,11 @@ class ChatPage(BasePage):
         # Settings row
         settings = QHBoxLayout()
         settings.setSpacing(15)
+        
+        # Unlimited rounds checkbox
+        self._unlimited_check = QCheckBox()
+        self._unlimited_check.stateChanged.connect(self._on_unlimited_changed)
+        settings.addWidget(self._unlimited_check)
         
         self._rounds_label = QLabel()
         settings.addWidget(self._rounds_label)
@@ -169,6 +175,7 @@ class ChatPage(BasePage):
             self._prompt_edit.blockSignals(True)
             self._prompt_edit.setPlainText(tr("chat.prompt_default"))
             self._prompt_edit.blockSignals(False)
+        self._unlimited_check.setText(tr("chat.unlimited"))
         self._rounds_label.setText(tr("chat.rounds"))
         self._max_wait_label.setText(tr("chat.max_wait"))
         self._start_btn.setText(tr("chat.start"))
@@ -233,7 +240,7 @@ class ChatPage(BasePage):
             screenshot_reader=mw._screenshot_reader,
             window_info=mw._selected_window,
             prompt=prompt,
-            rounds=self._rounds_spin.value(),
+            rounds=999999 if self._unlimited_check.isChecked() else self._rounds_spin.value(),
             max_wait_seconds=self._max_wait_spin.value(),
             manual_chat_rect=mw._manual_chat_rect,
             manual_input_rect=mw._manual_input_rect,
@@ -290,6 +297,12 @@ class ChatPage(BasePage):
     def _on_prompt_changed(self) -> None:
         """Track when user manually edits the prompt."""
         self._prompt_user_modified = True
+    
+    def _on_unlimited_changed(self, state: int) -> None:
+        """Handle unlimited checkbox state change."""
+        is_unlimited = state == Qt.Checked.value
+        self._rounds_spin.setEnabled(not is_unlimited)
+        self._rounds_label.setEnabled(not is_unlimited)
     
     def _on_manual_send(self) -> None:
         """Send manual message."""

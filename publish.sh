@@ -9,7 +9,7 @@
 #   ./publish.sh check    - Build and check package
 #
 # Prerequisites:
-#   1. Install dev dependencies: uv pip install -e ".[dev]"
+#   1. Install build tools: pip install build twine
 #   2. Set PyPI token: export TWINE_PASSWORD=pypi-xxxx
 #      Or create ~/.pypirc with credentials
 # ============================================================
@@ -24,13 +24,6 @@ echo " Liao Package Publisher"
 echo "============================================================"
 echo ""
 
-# Check if uv is available
-if ! command -v uv &> /dev/null; then
-    echo "[ERROR] uv not found. Please install uv first."
-    echo "        https://docs.astral.sh/uv/"
-    exit 1
-fi
-
 # Step 1: Clean old builds
 echo "[1/4] Cleaning old build artifacts..."
 rm -rf dist/ build/ src/*.egg-info src/liao.egg-info
@@ -39,13 +32,13 @@ echo ""
 
 # Step 2: Install/update build tools
 echo "[2/4] Ensuring build tools are installed..."
-uv pip install build twine --quiet
+pip install build twine --quiet --upgrade
 echo "      Done."
 echo ""
 
 # Step 3: Build package
 echo "[3/4] Building package..."
-uv run python -m build
+python -m build
 echo "      Done."
 echo ""
 
@@ -63,7 +56,7 @@ case "$MODE" in
         ;;
     check)
         echo "[4/4] Checking package with twine..."
-        uv run twine check dist/*
+        twine check dist/*
         ;;
     test)
         echo "[4/4] Uploading to TestPyPI..."
@@ -71,7 +64,7 @@ case "$MODE" in
         echo "NOTE: You need a TestPyPI account and token."
         echo "      Set TWINE_PASSWORD=pypi-xxxx or use ~/.pypirc"
         echo ""
-        uv run twine upload --repository testpypi dist/*
+        twine upload --repository testpypi dist/*
         echo ""
         echo "Success! Package uploaded to TestPyPI."
         echo "Install with: pip install -i https://test.pypi.org/simple/ liao"
@@ -82,7 +75,7 @@ case "$MODE" in
         echo "NOTE: You need a PyPI account and token."
         echo "      Set TWINE_PASSWORD=pypi-xxxx or use ~/.pypirc"
         echo ""
-        uv run twine upload dist/*
+        twine upload dist/*
         echo ""
         echo "Success! Package uploaded to PyPI."
         echo "Install with: pip install liao"

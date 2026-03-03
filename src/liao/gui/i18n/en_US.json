@@ -73,6 +73,7 @@
         "prompt_label": "Conversation Prompt:",
         "prompt_placeholder": "Describe the conversation style...",
         "prompt_default": "You are a friendly assistant. Respond naturally and briefly (1-3 sentences), like a real conversation. Match the other person's tone and style.",
+        "unlimited": "Unlimited",
         "rounds": "Rounds:",
         "max_wait": "Max Wait (sec):",
         "read_replies": "Read Replies",

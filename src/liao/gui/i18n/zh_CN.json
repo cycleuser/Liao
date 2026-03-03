@@ -73,6 +73,7 @@
         "prompt_label": "对话提示词:",
         "prompt_placeholder": "描述对话风格...",
         "prompt_default": "你是一个友好的助手。回复要自然简短（1-3句话），像真正的对话一样。匹配对方的语气和风格。",
+        "unlimited": "无限制",
         "rounds": "轮数:",
         "max_wait": "最长等待(秒):",
         "read_replies": "识别回复",
