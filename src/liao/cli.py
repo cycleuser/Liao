@@ -142,6 +142,22 @@ def main() -> int:
         action="version",
         version=f"%(prog)s {__version__}",
     )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Verbose output",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Output results as JSON",
+    )
+    parser.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress non-essential output",
+    )
     
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
@@ -214,9 +230,15 @@ def main() -> int:
     
     args = parser.parse_args()
     
-    # Setup logging
+    # Setup logging respecting verbose/quiet flags
+    if hasattr(args, 'quiet') and args.quiet:
+        log_level = logging.WARNING
+    elif hasattr(args, 'verbose') and args.verbose:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
     

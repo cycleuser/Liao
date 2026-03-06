@@ -231,6 +231,29 @@ twine upload dist/*
 - **Wayland 截图失败**：安装 GStreamer 和 PipeWire 相关包，出现提示时授予屏幕捕获权限
 - **OCR 返回空结果**：安装 OCR 引擎（`pip install rapidocr-onnxruntime` 或 `pip install pytesseract`）
 
+## Agent 集成（OpenAI Function Calling）
+
+Liao 提供 OpenAI 兼容的工具定义，可供 LLM Agent 调用：
+
+```python
+from liao.tools import TOOLS, dispatch
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    tools=TOOLS,
+)
+
+result = dispatch(
+    tool_call.function.name,
+    tool_call.function.arguments,
+)
+```
+
+## CLI 帮助
+
+![CLI 帮助](images/liao_help.png)
+
 ## 许可证
 
 本项目采用 GNU 通用公共许可证 v3.0。详见 [LICENSE](LICENSE) 文件。

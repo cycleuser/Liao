@@ -27,11 +27,14 @@ Example usage:
 
 __version__ = "0.1.0"
 
-from .api import VisionAgent
+from .api import VisionAgent, ToolResult, list_windows, run_automation
 from .llm.factory import LLMClientFactory
 
 __all__ = [
     "__version__",
     "VisionAgent",
     "LLMClientFactory",
+    "ToolResult",
+    "list_windows",
+    "run_automation",
 ]

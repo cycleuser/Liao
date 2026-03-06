@@ -1,0 +1,16 @@
+usage: liao [-h] [--version] [-v] [--json] [-q] {gui,list,auto} ...
+
+Liao (聊) - Vision-based GUI interaction assistant with LLM integration
+
+positional arguments:
+  {gui,list,auto}  Commands
+    gui            Launch GUI application
+    list           List available windows
+    auto           Run headless automation
+
+options:
+  -h, --help       show this help message and exit
+  --version, -V    show program's version number and exit
+  -v, --verbose    Verbose output
+  --json           Output results as JSON
+  -q, --quiet      Suppress non-essential output

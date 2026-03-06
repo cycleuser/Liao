@@ -231,6 +231,29 @@ twine upload dist/*
 - **Wayland screenshot fails**: Install GStreamer and PipeWire packages, grant screen capture permission when prompted
 - **OCR returns empty results**: Install an OCR engine (`pip install rapidocr-onnxruntime` or `pip install pytesseract`)
 
+## Agent Integration (OpenAI Function Calling)
+
+Liao exposes OpenAI-compatible tools for LLM agents:
+
+```python
+from liao.tools import TOOLS, dispatch
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    tools=TOOLS,
+)
+
+result = dispatch(
+    tool_call.function.name,
+    tool_call.function.arguments,
+)
+```
+
+## CLI Help
+
+![CLI Help](images/liao_help.png)
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
