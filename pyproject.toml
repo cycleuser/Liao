@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Operating System :: MacOS",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Desktop Environment",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
