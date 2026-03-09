@@ -25,7 +25,7 @@ Example usage:
     agent.run()
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from .api import VisionAgent, ToolResult, list_windows, run_automation
 from .llm.factory import LLMClientFactory
