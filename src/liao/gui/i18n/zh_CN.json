@@ -21,6 +21,7 @@
         "step_window": "窗口",
         "step_area": "区域",
         "step_kb": "知识库",
+        "step_opencode": "OpenCode",
         "step_chat": "对话"
     },
     "connection": {
@@ -57,6 +58,9 @@
         "title": "区域设置",
         "subtitle": "截图并自动检测对话区域，或手动选择。",
         "capture": "自动检测",
+        "auto_detect": "智能自动识别",
+        "auto_detection": "智能自动识别",
+        "manual_selection": "手动选择",
         "select_chat": "选择对话区域",
         "select_input": "选择输入区域",
         "select_send": "标记发送按钮",
@@ -64,6 +68,12 @@
         "preview": "截图预览",
         "info": "检测信息将显示在这里",
         "warning_no_ocr": "未找到OCR引擎，自动检测将仅使用启发式方法。\n安装: pip install easyocr",
+        "detecting": "正在检测...",
+        "detection_failed": "检测失败",
+        "window_closed": "窗口已关闭",
+        "select_window_first": "请先选择一个窗口",
+        "detected_app": "检测到的应用",
+        "no_window": "未选择窗口",
         "detection": {
             "method": "检测: {method} ({confidence})",
             "ocr": "OCR",
@@ -162,5 +172,41 @@
         "title": "知识库设置",
         "subtitle": "可选：配置知识库以增强对话效果（RAG）。可以跳过此步骤。",
         "upload_documents": "上传文档"
+    },
+    "opencode": {
+        "connection": "OpenCode 连接",
+        "connect": "连接",
+        "disconnect": "断开",
+        "refresh": "刷新",
+        "new_session": "新建会话",
+        "abort": "中止",
+        "share": "分享",
+        "delete": "删除",
+        "send": "发送",
+        "command": "命令",
+        "session_info": "会话信息",
+        "no_messages": "暂无消息。选择一个会话查看消息。",
+        "status": {
+            "connected": "OpenCode 已连接",
+            "disconnected": "未连接",
+            "failed": "连接失败",
+            "connecting": "连接中..."
+        },
+        "status_label": "状态",
+        "model": "模型",
+        "error": "OpenCode 错误",
+        "share_title": "会话已分享",
+        "delete_title": "删除会话",
+        "delete_confirm": "确定要删除此会话吗？",
+        "title": "OpenCode 集成",
+        "subtitle": "实时监控和控制 OpenCode 会话。发送消息、跟踪进度、管理编码助手。",
+        "not_installed": "OpenCode 未安装",
+        "install_hint": "从 https://opencode.ai 安装 OpenCode",
+        "not_available": "OpenCode 不可用",
+        "server_running": "服务器运行中",
+        "server_not_running": "服务器未运行",
+        "sessions_found": "找到 {count} 个会话",
+        "refresh_failed": "刷新会话失败",
+        "export_failed": "导出会话数据失败"
     }
 }

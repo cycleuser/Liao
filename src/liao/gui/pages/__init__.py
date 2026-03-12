@@ -7,6 +7,7 @@ from .area_page import AreaPage
 from .kb_page import KBPage
 from .chat_page import ChatPage
 from .kb_settings_page import KBSettingsPage
+from .opencode_page import OpenCodePage
 
 __all__ = [
     "BasePage",
@@ -16,4 +17,5 @@ __all__ = [
     "KBPage",
     "ChatPage",
     "KBSettingsPage",
+    "OpenCodePage",
 ]

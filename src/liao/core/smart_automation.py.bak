@@ -1,0 +1,630 @@
+"""Intelligent automation manager for chat applications.
+
+Provides automatic detection and control of chat applications:
+- Auto-detect chat/input areas
+- Auto-detect send button
+- Auto-detect conversation flow
+- Smart message handling with app-specific send modes
+"""
+
+from __future__ import annotations
+
+import logging
+import re
+import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Callable
+
+from .area_detector import ChatAreaDetector
+from .input_simulator import InputSimulator
+from .screenshot import ScreenshotReader
+from ..models.detection import AreaDetectionResult
+from ..models.message import ChatMessage
+from ..agent.chat_parser import OCRChatParser
+
+if TYPE_CHECKING:
+    from ..models.window import WindowInfo
+
+logger = logging.getLogger(__name__)
+
+
+class SendMode(Enum):
+    """Message send mode for different applications."""
+
+    ENTER = "enter"  # Single Enter to send
+    CTRL_ENTER = "ctrl_enter"  # Ctrl+Enter to send
+    SHIFT_ENTER = "shift_enter"  # Shift+Enter to send
+    BUTTON = "button"  # Click send button
+    BUTTON_THEN_ENTER = "button_enter"  # Click button, then Enter as backup
+
+
+# App-specific configurations for smart detection
+# send_mode: How to send messages
+# send_button_offset: Relative position of send button from input area bottom-right
+# new_line_mode: How to insert new line (for apps where Enter sends)
+APP_CONFIGS = {
+    "wechat": {
+        "name": "WeChat",
+        "send_mode": SendMode.BUTTON_THEN_ENTER,
+        "send_button_offset": (-45, -15),
+        "new_line_mode": "ctrl_enter",  # Ctrl+Enter for new line
+        "sidebar_ratio": 0.22,
+        "header_ratio": 0.06,
+        "input_ratio": 0.13,
+        "description": "WeChat uses send button, Enter sends, Ctrl+Enter for new line",
+    },
+    "wecom": {
+        "name": "WeCom",
+        "send_mode": SendMode.BUTTON_THEN_ENTER,
+        "send_button_offset": (-45, -15),
+        "new_line_mode": "ctrl_enter",
+        "sidebar_ratio": 0.22,
+        "header_ratio": 0.06,
+        "input_ratio": 0.13,
+        "description": "WeCom uses send button, similar to WeChat",
+    },
+    "qq": {
+        "name": "QQ",
+        "send_mode": SendMode.BUTTON_THEN_ENTER,
+        "send_button_offset": (-50, -15),
+        "new_line_mode": "ctrl_enter",  # QQ default: Ctrl+Enter for new line
+        "sidebar_ratio": 0.25,
+        "header_ratio": 0.06,
+        "input_ratio": 0.15,
+        "description": "QQ uses send button, Ctrl+Enter for new line",
+    },
+    "telegram": {
+        "name": "Telegram",
+        "send_mode": SendMode.ENTER,  # Enter sends, Shift+Enter for new line
+        "send_button_offset": (-30, -12),
+        "new_line_mode": "shift_enter",
+        "sidebar_ratio": 0.30,
+        "header_ratio": 0.05,
+        "input_ratio": 0.08,
+        "description": "Telegram: Enter sends, Shift+Enter for new line",
+    },
+    "dingtalk": {
+        "name": "DingTalk",
+        "send_mode": SendMode.ENTER,  # Enter sends by default
+        "send_button_offset": (-45, -15),
+        "new_line_mode": "ctrl_enter",
+        "sidebar_ratio": 0.22,
+        "header_ratio": 0.06,
+        "input_ratio": 0.12,
+        "description": "DingTalk: Enter sends, Ctrl+Enter for new line",
+    },
+    "feishu": {
+        "name": "Feishu/Lark",
+        "send_mode": SendMode.ENTER,  # Enter sends
+        "send_button_offset": (-40, -15),
+        "new_line_mode": "shift_enter",
+        "sidebar_ratio": 0.22,
+        "header_ratio": 0.06,
+        "input_ratio": 0.12,
+        "description": "Feishu: Enter sends, Shift+Enter for new line",
+    },
+    "slack": {
+        "name": "Slack",
+        "send_mode": SendMode.ENTER,  # Enter sends by default
+        "send_button_offset": (-30, -12),
+        "new_line_mode": "shift_enter",
+        "sidebar_ratio": 0.20,
+        "header_ratio": 0.05,
+        "input_ratio": 0.10,
+        "description": "Slack: Enter sends, Shift+Enter for new line",
+    },
+    "discord": {
+        "name": "Discord",
+        "send_mode": SendMode.ENTER,  # Enter sends
+        "send_button_offset": (-25, -12),
+        "new_line_mode": "shift_enter",
+        "sidebar_ratio": 0.20,
+        "header_ratio": 0.05,
+        "input_ratio": 0.10,
+        "description": "Discord: Enter sends, Shift+Enter for new line",
+    },
+    "teams": {
+        "name": "Microsoft Teams",
+        "send_mode": SendMode.CTRL_ENTER,  # Ctrl+Enter sends, Enter for new line
+        "send_button_offset": (-35, -12),
+        "new_line_mode": "enter",
+        "sidebar_ratio": 0.20,
+        "header_ratio": 0.05,
+        "input_ratio": 0.10,
+        "description": "Teams: Ctrl+Enter sends, Enter for new line",
+    },
+    "whatsapp": {
+        "name": "WhatsApp",
+        "send_mode": SendMode.ENTER,
+        "send_button_offset": (-30, -12),
+        "new_line_mode": "shift_enter",
+        "sidebar_ratio": 0.25,
+        "header_ratio": 0.05,
+        "input_ratio": 0.10,
+        "description": "WhatsApp: Enter sends, Shift+Enter for new line",
+    },
+    "line": {
+        "name": "LINE",
+        "send_mode": SendMode.ENTER,
+        "send_button_offset": (-30, -12),
+        "new_line_mode": "ctrl_enter",
+        "sidebar_ratio": 0.25,
+        "header_ratio": 0.05,
+        "input_ratio": 0.10,
+        "description": "LINE: Enter sends, Ctrl+Enter for new line",
+    },
+    "other": {
+        "name": "Unknown App",
+        "send_mode": SendMode.ENTER,  # Default to Enter
+        "send_button_offset": (-45, -15),
+        "new_line_mode": "shift_enter",
+        "sidebar_ratio": 0.45,
+        "header_ratio": 0.05,
+        "input_ratio": 0.15,
+        "description": "Unknown app: Using Enter to send",
+    },
+}
+
+
+@dataclass
+class AutomationConfig:
+    """Configuration for automated chat control."""
+
+    chat_area: tuple[int, int, int, int] | None = None
+    input_area: tuple[int, int, int, int] | None = None
+    send_button_pos: tuple[int, int] | None = None
+    app_type: str = "other"
+    detection_method: str = "auto"
+    confidence: float = 0.5
+    send_mode: SendMode = SendMode.ENTER
+    new_line_mode: str = "shift_enter"
+
+
+class SmartAutomationManager:
+    """Intelligent automation manager for chat applications.
+
+    Automatically detects and configures chat automation:
+    1. Detects app type from window info
+    2. Finds chat and input areas via OCR/heuristics
+    3. Locates send button
+    4. Determines correct send mode (Enter vs Ctrl+Enter)
+    5. Monitors conversation flow
+    6. Handles message sending
+
+    Example:
+        manager = SmartAutomationManager(screenshot_reader)
+        config = manager.auto_detect(window_info)
+        if config:
+            manager.send_message("Hello!", window_info, config)
+    """
+
+    def __init__(self, screenshot_reader: ScreenshotReader):
+        self._reader = screenshot_reader
+        self._detector = ChatAreaDetector(screenshot_reader)
+        self._parser = OCRChatParser(screenshot_reader)
+        self._input = InputSimulator()
+
+        self._last_messages: list[ChatMessage] = []
+        self._config: AutomationConfig | None = None
+
+        # Callbacks
+        self.on_status: Callable[[str], None] | None = None
+        self.on_detection: Callable[[AutomationConfig], None] | None = None
+        self.on_message: Callable[[ChatMessage], None] | None = None
+
+    @property
+    def config(self) -> AutomationConfig | None:
+        return self._config
+
+    @property
+    def app_config(self) -> dict:
+        """Get app-specific configuration."""
+        if self._config:
+            return APP_CONFIGS.get(self._config.app_type, APP_CONFIGS["other"])
+        return APP_CONFIGS["other"]
+
+    def auto_detect(
+        self,
+        window_info: WindowInfo,
+        force_ocr: bool = False,
+    ) -> AutomationConfig | None:
+        """Automatically detect all chat elements.
+
+        Args:
+            window_info: Target window
+            force_ocr: Force OCR-based detection
+
+        Returns:
+            AutomationConfig if detection successful
+        """
+        self._emit_status("Detecting chat areas...")
+
+        app_type = window_info.app_type
+        app_config = APP_CONFIGS.get(app_type, APP_CONFIGS["other"])
+
+        # Detect chat/input areas
+        areas = self._detector.detect_areas(window_info)
+        if not areas:
+            self._emit_status("Failed to detect areas")
+            return None
+
+        config = AutomationConfig(
+            chat_area=areas.chat_area_rect,
+            input_area=areas.input_area_rect,
+            app_type=app_type,
+            detection_method=areas.method,
+            confidence=areas.confidence,
+            send_mode=app_config.get("send_mode", SendMode.ENTER),
+            new_line_mode=app_config.get("new_line_mode", "shift_enter"),
+        )
+
+        # Detect send button
+        send_pos = self._detect_send_button(window_info, config, app_config)
+        if send_pos:
+            config.send_button_pos = send_pos
+
+        self._config = config
+
+        if self.on_detection:
+            self.on_detection(config)
+
+        send_desc = self._get_send_mode_description(config.send_mode)
+        self._emit_status(
+            f"Detected: {app_config['name']} | Send: {send_desc} | "
+            f"Method: {areas.method}, Confidence: {areas.confidence:.0%}"
+        )
+
+        return config
+
+    def _get_send_mode_description(self, mode: SendMode) -> str:
+        """Get human-readable description of send mode."""
+        descriptions = {
+            SendMode.ENTER: "Enter",
+            SendMode.CTRL_ENTER: "Ctrl+Enter",
+            SendMode.SHIFT_ENTER: "Shift+Enter",
+            SendMode.BUTTON: "Button",
+            SendMode.BUTTON_THEN_ENTER: "Button+Enter",
+        }
+        return descriptions.get(mode, "Enter")
+
+    def _detect_send_button(
+        self,
+        window_info: WindowInfo,
+        config: AutomationConfig,
+        app_config: dict,
+    ) -> tuple[int, int] | None:
+        """Detect send button position.
+
+        Strategy:
+        1. Use OCR to find "Send" or similar button text
+        2. Fall back to heuristic position based on app type
+
+        Args:
+            window_info: Target window
+            config: Current automation config
+            app_config: App-specific configuration
+
+        Returns:
+            (x, y) screen coordinates or None
+        """
+        if not config.input_area:
+            return None
+
+        # Heuristic: bottom-right of input area
+        input_rect = config.input_area
+        offset = app_config.get("send_button_offset", (-45, -15))
+
+        btn_x = input_rect[2] + offset[0]
+        btn_y = input_rect[3] + offset[1]
+
+        # Try OCR-based detection if available
+        if self._reader.has_ocr():
+            try:
+                screenshot = self._reader.capture_window(window_info)
+                if screenshot:
+                    results = self._reader.extract_with_bboxes(screenshot)
+
+                    # Look for send button text patterns (multi-language)
+                    send_patterns = [
+                        # Chinese
+                        r"发送|发送\(S\)|发送\s*\(S\)",
+                        r"发\s*送",
+                        # English
+                        r"Send|Submit|Post|Send Message",
+                        # Japanese
+                        r"送信",
+                        # Korean
+                        r"보내기",
+                        # Others
+                        r"确定|确认|Confirm|OK",
+                    ]
+
+                    for bbox, text, conf in results:
+                        for pattern in send_patterns:
+                            if re.search(pattern, text, re.IGNORECASE):
+                                cx = sum(p[0] for p in bbox) / 4
+                                cy = sum(p[1] for p in bbox) / 4
+                                logger.info(
+                                    "Found send button via OCR: '%s' at (%.0f, %.0f)", text, cx, cy
+                                )
+                                return (int(cx), int(cy))
+
+            except Exception as e:
+                logger.debug(f"OCR send button detection failed: {e}")
+
+        logger.info(f"Using heuristic send button: ({btn_x}, {btn_y})")
+        return (btn_x, btn_y)
+
+    def get_messages(
+        self,
+        window_info: WindowInfo,
+        config: AutomationConfig | None = None,
+    ) -> list[ChatMessage]:
+        """Get current messages from chat area."""
+        config = config or self._config
+        if not config or not config.chat_area:
+            return []
+
+        messages = self._parser.parse_chat_area(window_info, config.chat_area)
+        self._last_messages = messages
+        return messages
+
+    def get_new_messages(
+        self,
+        window_info: WindowInfo,
+        config: AutomationConfig | None = None,
+    ) -> list[ChatMessage]:
+        """Get new messages since last check."""
+        current = self.get_messages(window_info, config)
+
+        known = {self._normalize(m.content) for m in self._last_messages}
+        new = [m for m in current if self._normalize(m.content) not in known]
+
+        self._last_messages = current
+        return new
+
+    def send_message(
+        self,
+        text: str,
+        window_info: WindowInfo,
+        config: AutomationConfig | None = None,
+    ) -> bool:
+        """Send a message to the chat.
+
+        Uses app-specific send mode:
+        - ENTER: Press Enter to send
+        - CTRL_ENTER: Press Ctrl+Enter to send
+        - SHIFT_ENTER: Press Shift+Enter to send
+        - BUTTON: Click send button
+        - BUTTON_THEN_ENTER: Click button, then Enter as backup
+
+        Args:
+            text: Message to send
+            window_info: Target window
+            config: Automation config
+
+        Returns:
+            True if send initiated successfully
+        """
+        config = config or self._config
+        if not config or not config.input_area:
+            logger.error("No input area configured")
+            return False
+
+        # Focus window
+        self._input.focus_window(window_info.hwnd)
+        time.sleep(0.2)
+
+        # Click input area center
+        input_rect = config.input_area
+        ix = (input_rect[0] + input_rect[2]) // 2
+        iy = (input_rect[1] + input_rect[3]) // 2
+
+        self._emit_status(f"Typing message...")
+        self._input.click_and_type(
+            x=ix,
+            y=iy,
+            text=text,
+            hwnd=window_info.hwnd,
+            win_rect=window_info.rect,
+            clear_first=True,
+            move_duration=0.3,
+        )
+        time.sleep(0.15)
+
+        # Send the message using app-specific mode
+        return self._trigger_send(window_info, config)
+
+    def _trigger_send(
+        self,
+        window_info: WindowInfo,
+        config: AutomationConfig,
+    ) -> bool:
+        """Trigger message sending using configured send mode."""
+        hwnd = window_info.hwnd
+        mode = config.send_mode
+
+        if mode == SendMode.ENTER:
+            self._emit_status("Sending with Enter...")
+            self._input.press_key("enter")
+            return True
+
+        elif mode == SendMode.CTRL_ENTER:
+            self._emit_status("Sending with Ctrl+Enter...")
+            self._input.hotkey("ctrl", "enter")
+            return True
+
+        elif mode == SendMode.SHIFT_ENTER:
+            self._emit_status("Sending with Shift+Enter...")
+            self._input.hotkey("shift", "enter")
+            return True
+
+        elif mode == SendMode.BUTTON:
+            if config.send_button_pos:
+                bx, by = config.send_button_pos
+                self._emit_status(f"Clicking send button at ({bx}, {by})...")
+                self._input.click_in_window(
+                    hwnd=hwnd,
+                    win_left=window_info.rect[0],
+                    win_top=window_info.rect[1],
+                    screen_x=bx,
+                    screen_y=by,
+                )
+                return True
+            else:
+                # Fallback to Enter
+                self._emit_status("No button position, using Enter...")
+                self._input.press_key("enter")
+                return True
+
+        elif mode == SendMode.BUTTON_THEN_ENTER:
+            # Try button first
+            if config.send_button_pos:
+                bx, by = config.send_button_pos
+                self._emit_status(f"Clicking send button at ({bx}, {by})...")
+                self._input.click_in_window(
+                    hwnd=hwnd,
+                    win_left=window_info.rect[0],
+                    win_top=window_info.rect[1],
+                    screen_x=bx,
+                    screen_y=by,
+                )
+                time.sleep(0.1)
+
+            # Also press Enter as backup (common for WeChat, QQ)
+            self._emit_status("Pressing Enter to confirm...")
+            self._input.press_key("enter")
+            return True
+
+        # Default fallback
+        self._emit_status("Using default Enter to send...")
+        self._input.press_key("enter")
+        return True
+
+    def send_with_new_line(
+        self,
+        lines: list[str],
+        window_info: WindowInfo,
+        config: AutomationConfig | None = None,
+    ) -> bool:
+        """Send a multi-line message.
+
+        Args:
+            lines: List of text lines
+            window_info: Target window
+            config: Automation config
+
+        Returns:
+            True if successful
+        """
+        config = config or self._config
+        if not config or not config.input_area:
+            return False
+
+        # Focus window
+        self._input.focus_window(window_info.hwnd)
+        time.sleep(0.2)
+
+        # Click input area
+        input_rect = config.input_area
+        ix = (input_rect[0] + input_rect[2]) // 2
+        iy = (input_rect[1] + input_rect[3]) // 2
+
+        self._input.move_and_click(ix, iy)
+        time.sleep(0.1)
+
+        # Clear existing text
+        self._input.hotkey("ctrl", "a")
+        time.sleep(0.05)
+        self._input.press_key("delete")
+        time.sleep(0.05)
+
+        # Type each line with appropriate new-line shortcut
+        new_line_mode = config.new_line_mode
+
+        for i, line in enumerate(lines):
+            if i > 0:
+                # Insert new line
+                if new_line_mode == "ctrl_enter":
+                    self._input.hotkey("ctrl", "enter")
+                elif new_line_mode == "shift_enter":
+                    self._input.hotkey("shift", "enter")
+                else:
+                    self._input.press_key("enter")
+                time.sleep(0.05)
+
+            # Type the line
+            self._input.type_text(line, clear_first=False)
+            time.sleep(0.05)
+
+        # Send the message
+        return self._trigger_send(window_info, config)
+
+    def quick_auto_run(
+        self,
+        window_info: WindowInfo,
+        prompt: str,
+    ) -> AutomationConfig | None:
+        """Quick auto-detect and configure for immediate use."""
+        return self.auto_detect(window_info)
+
+    def _emit_status(self, msg: str) -> None:
+        """Emit status callback."""
+        logger.info(msg)
+        if self.on_status:
+            self.on_status(msg)
+
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """Normalize text for comparison."""
+        return text.strip().replace(" ", "").replace("\n", "")
+
+    def is_ready(self) -> bool:
+        """Check if automation is ready to run."""
+        return (
+            self._config is not None
+            and self._config.chat_area is not None
+            and self._config.input_area is not None
+        )
+
+    def get_status_text(self) -> str:
+        """Get human-readable status."""
+        if not self._config:
+            return "Not configured"
+
+        app_config = self.app_config
+        send_desc = self._get_send_mode_description(self._config.send_mode)
+        return (
+            f"Ready: {app_config['name']} | Send: {send_desc} | "
+            f"Method: {self._config.detection_method}, "
+            f"Confidence: {self._config.confidence:.0%}"
+        )
+
+    def get_send_info(self) -> dict:
+        """Get detailed send configuration info."""
+        config = self._config
+        app_config = self.app_config
+
+        if not config:
+            return {"configured": False}
+
+        return {
+            "configured": True,
+            "app_name": app_config.get("name", "Unknown"),
+            "send_mode": self._get_send_mode_description(config.send_mode),
+            "new_line_mode": config.new_line_mode,
+            "has_send_button": config.send_button_pos is not None,
+            "description": app_config.get("description", ""),
+        }
+
+
+def get_supported_apps() -> list[str]:
+    """Get list of supported app types."""
+    return list(APP_CONFIGS.keys())
+
+
+def get_app_send_mode(app_type: str) -> SendMode:
+    """Get send mode for a specific app type."""
+    app_config = APP_CONFIGS.get(app_type, APP_CONFIGS["other"])
+    return app_config.get("send_mode", SendMode.ENTER)

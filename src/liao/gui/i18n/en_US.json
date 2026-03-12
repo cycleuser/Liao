@@ -21,6 +21,7 @@
         "step_window": "Window",
         "step_area": "Area",
         "step_kb": "Knowledge Base",
+        "step_opencode": "OpenCode",
         "step_chat": "Chat"
     },
     "connection": {
@@ -57,6 +58,9 @@
         "title": "Area Setup",
         "subtitle": "Capture the target window and detect chat areas, or manually select them.",
         "capture": "Auto Detect",
+        "auto_detect": "Smart Auto-Detect",
+        "auto_detection": "Smart Auto-Detection",
+        "manual_selection": "Manual Selection",
         "select_chat": "Select Chat Area",
         "select_input": "Select Input Area",
         "select_send": "Mark Send Button",
@@ -64,6 +68,12 @@
         "preview": "Screenshot Preview",
         "info": "Detection info will appear here",
         "warning_no_ocr": "No OCR engine. Auto detect uses heuristics only.\nInstall: pip install easyocr",
+        "detecting": "Detecting...",
+        "detection_failed": "Detection failed",
+        "window_closed": "Window was closed",
+        "select_window_first": "Please select a window first",
+        "detected_app": "Detected app",
+        "no_window": "No window selected",
         "detection": {
             "method": "Detection: {method} ({confidence})",
             "ocr": "OCR",
@@ -162,5 +172,41 @@
         "title": "Knowledge Base Setup",
         "subtitle": "Optionally configure a knowledge base for RAG-enhanced conversations. You can skip this step.",
         "upload_documents": "Upload Documents"
+    },
+    "opencode": {
+        "connection": "OpenCode Connection",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "refresh": "Refresh",
+        "new_session": "New Session",
+        "abort": "Abort",
+        "share": "Share",
+        "delete": "Delete",
+        "send": "Send",
+        "command": "Command",
+        "session_info": "Session Info",
+        "no_messages": "No messages yet. Select a session to view messages.",
+        "status": {
+            "connected": "OpenCode Connected",
+            "disconnected": "Disconnected",
+            "failed": "Connection failed",
+            "connecting": "Connecting..."
+        },
+        "status_label": "Status",
+        "model": "Model",
+        "error": "OpenCode Error",
+        "share_title": "Session Shared",
+        "delete_title": "Delete Session",
+        "delete_confirm": "Are you sure you want to delete this session?",
+        "title": "OpenCode Integration",
+        "subtitle": "Monitor and control OpenCode sessions in real-time. Send messages, track progress, and manage your coding agent.",
+        "not_installed": "OpenCode Not Installed",
+        "install_hint": "Install OpenCode from https://opencode.ai",
+        "not_available": "OpenCode is not available",
+        "server_running": "Server running",
+        "server_not_running": "Server not running",
+        "sessions_found": "Found {count} sessions",
+        "refresh_failed": "Failed to refresh sessions",
+        "export_failed": "Failed to export session data"
     }
 }
